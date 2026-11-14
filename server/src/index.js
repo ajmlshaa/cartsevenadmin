@@ -90,7 +90,11 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(` CartSeven Server running on port ${PORT} [Mode: ${process.env.NODE_ENV || 'development'}]`);
-  console.log(` API Endpoint: http://localhost:${PORT}/api/health`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(` CartSeven Server running on port ${PORT} [Mode: ${process.env.NODE_ENV || 'development'}]`);
+    console.log(` API Endpoint: http://localhost:${PORT}/api/health`);
+  });
+}
+
+export default app;
