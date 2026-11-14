@@ -1,0 +1,25 @@
+{
+  "name": "cartseven",
+  "version": "1.0.0",
+  "description": "CartSeven - E-commerce Multi-Location Accounting & Financial Management Platform",
+  "scripts": {
+    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "seed": "npm --prefix server run seed",
+    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix server install",
+    "start": "node server/src/index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "ecommerce",
+    "accounting",
+    "finance",
+    "ledger",
+    "invoicing",
+    "multi-user"
+  ],
+  "author": "",
+  "license": "ISC"
+}
