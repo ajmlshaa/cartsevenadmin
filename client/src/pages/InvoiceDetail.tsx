@@ -30,38 +30,7 @@ export const InvoiceDetail: React.FC = () => {
           setInvoice(res.data);
         }
       } catch {
-        // Fallback mock with INR values
-        setInvoice({
-          _id: id || 'inv_mock',
-          invoiceNumber: 'INV-2026-0001',
-          customerName: 'Aero Dynamics Corp',
-          customerEmail: 'procurement@aerodynamics.com',
-          customerPhone: '+91 98200 12345',
-          customerAddress: '420 Tech Boulevard, Cyber City, Gurugram, HR 122002',
-          platform: 'Direct Website',
-          orderReference: 'ORD-8941',
-          items: [
-            { sku: 'CS-PRO-10', description: 'CartSeven Pro Wireless Hub (Commercial Edition)', quantity: 5, unitPrice: 7500.0, amount: 37500.0 },
-            { sku: 'CS-ACC-02', description: 'Heavy Duty Anodized Aluminum Mounting Kit', quantity: 5, unitPrice: 1200.0, amount: 6000.0 },
-          ],
-          subtotal: 43500.0,
-          taxRate: 18.0,
-          taxAmount: 7830.0,
-          shippingFee: 1200.0,
-          discount: 1500.0,
-          totalAmount: 51030.0,
-          amountPaid: 51030.0,
-          balanceDue: 0,
-          status: 'paid',
-          paymentMethod: 'Razorpay / UPI Gateway',
-          issueDate: '2026-11-02',
-          dueDate: '2026-11-16',
-          paidAt: '2026-11-03',
-          notes: 'Standard 1-year commercial warranty included with all CartSeven units.',
-          location: 'HQ - New York, US',
-          createdByName: 'Sarah Jenkins',
-          createdAt: '2026-11-02T11:45:00.000Z',
-        });
+        setInvoice(null);
       } finally {
         setLoading(false);
       }

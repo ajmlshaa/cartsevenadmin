@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../src/index.js';
+import { localStore } from '../src/utils/localStore.js';
 
 describe('CartSeven Backend API Test Suite', () => {
   let p1Token = '';
@@ -149,17 +150,19 @@ describe('CartSeven Backend API Test Suite', () => {
       expect(equityNames.some((n) => n.includes('SHANU'))).toBe(true);
     });
 
+    let createdVoucherId = '';
+
     it('Posts a test Receipt Voucher for Capital Introduced', async () => {
       const voucherData = {
         type: 'Receipt Voucher',
         date: new Date().toISOString(),
         debitAccount: 'Bank Account - HDFC Current',
         creditAccount: 'AJMALSHA Capital Account',
-        amount: 50000,
+        amount: 25000,
         collectionMethod: 'Direct Bank Transfer (NEFT/RTGS)',
-        partyName: 'AJMALSHA Capital Injection',
+        partyName: 'Temporary Test Capital Entry',
         referenceNumber: 'NEFT-TEST-001',
-        narration: 'Initial working capital deposit into HDFC current account',
+        narration: 'Temporary test capital deposit',
       };
 
       const res = await request(app)
@@ -169,7 +172,8 @@ describe('CartSeven Backend API Test Suite', () => {
 
       expect([200, 201]).toContain(res.status);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.amount).toBe(50000);
+      expect(res.body.data.amount).toBe(25000);
+      createdVoucherId = res.body.data._id;
     });
 
     it('Verifies the newly created voucher in voucher register', async () => {
@@ -180,7 +184,27 @@ describe('CartSeven Backend API Test Suite', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.data)).toBe(true);
-      expect(res.body.data.some((v) => v.partyName === 'AJMALSHA Capital Injection')).toBe(true);
+      expect(res.body.data.some((v) => v.partyName === 'Temporary Test Capital Entry')).toBe(true);
+    });
+
+    it('Deletes test voucher after verification to keep data completely clean', async () => {
+      if (createdVoucherId) {
+        const res = await request(app)
+          .delete(`/api/vouchers/${createdVoucherId}`)
+          .set('Authorization', `Bearer ${p1Token}`);
+        expect([200, 204]).toContain(res.status);
+      }
+    });
+
+    afterAll(() => {
+      // Ensure test entries are not persisted in store.json
+      localStore.data.vouchers = localStore.data.vouchers.filter(
+        (v) => v.partyName !== 'Temporary Test Capital Entry' && v.partyName !== 'AJMALSHA Capital Injection'
+      );
+      localStore.data.auditLogs = localStore.data.auditLogs.filter(
+        (a) => !a.details?.includes('Temporary Test Capital Entry') && !a.details?.includes('AJMALSHA Capital Injection')
+      );
+      localStore.save();
     });
   });
 });
