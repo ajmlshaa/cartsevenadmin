@@ -1,4 +1,10 @@
-const rawBase = (((import.meta as any)?.env?.VITE_API_BASE_URL as string) || '/api').trim();
+const defaultBase = (import.meta as any)?.env?.PROD
+  ? 'https://cartsevenadmin.onrender.com/api'
+  : '/api';
+
+const rawBase = (
+  ((import.meta as any)?.env?.VITE_API_BASE_URL as string) || defaultBase
+).trim();
 const cleanBase = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
 const API_BASE = cleanBase.startsWith('http') && !cleanBase.endsWith('/api')
   ? `${cleanBase}/api`
