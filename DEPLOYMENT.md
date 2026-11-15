@@ -79,7 +79,7 @@ If you haven't pushed this repository to GitHub yet:
 
    | Key | Value |
    | :--- | :--- |
-   | `VITE_API_BASE_URL` | `https://cartseven-api.onrender.com/api` *(replace with your Render URL from Step 1)* |
+   | `VITE_API_BASE_URL` | `https://cartsevenadmin.onrender.com/api` |
    | `VITE_PUBLIC_STORE_URL` | `https://cartseven.com/` |
 
 6. Click **Deploy**.
