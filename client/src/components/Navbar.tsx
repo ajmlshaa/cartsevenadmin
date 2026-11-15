@@ -18,7 +18,7 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { label: 'Dashboard', to: '/' },
-    { label: 'Vouchers', to: '/vouchers' },
+    { label: 'Transactions', to: '/vouchers' },
     { label: 'Invoices', to: '/invoices' },
     { label: 'Expenses', to: '/expenses' },
     { label: 'Registers', to: '/registers' },

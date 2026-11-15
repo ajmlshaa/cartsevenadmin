@@ -45,6 +45,7 @@ const ProtectedLayout: React.FC = () => {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/vouchers" element={<Vouchers />} />
+          <Route path="/transactions" element={<Navigate to="/vouchers" replace />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/expenses" element={<Expenses />} />
