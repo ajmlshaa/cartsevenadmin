@@ -2,6 +2,10 @@ import mongoose from 'mongoose';
 
 const TransactionSchema = new mongoose.Schema(
   {
+    _id: {
+      type: String,
+      default: () => 'txn_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    },
     transactionNumber: {
       type: String,
       required: true,

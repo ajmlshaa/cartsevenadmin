@@ -204,18 +204,9 @@ class LocalStore {
           accounts: parsed.accounts?.length ? parsed.accounts : INITIAL_ACCOUNTS.map((a) => ({ ...a, balance: 0 })),
           invoices: parsed.invoices || [],
           expenses: parsed.expenses || [],
-          vouchers: (parsed.vouchers || []).filter(
-            (v) => v.partyName !== 'AJMALSHA Capital Injection' && v.amount !== 50000
-          ),
+          vouchers: parsed.vouchers || [],
           transactions: parsed.transactions || [],
-          auditLogs: (parsed.auditLogs || []).filter(
-            (a) =>
-              !(
-                a.details &&
-                (a.details.includes('50000') || a.details.includes('50,000')) &&
-                (a.entity === 'Voucher' || a.details.includes('Receipt Voucher'))
-              )
-          ),
+          auditLogs: parsed.auditLogs || [],
         };
         this.recalculateBalances();
       } else {

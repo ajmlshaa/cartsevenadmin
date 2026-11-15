@@ -2,6 +2,10 @@ import mongoose from 'mongoose';
 
 const VoucherSchema = new mongoose.Schema(
   {
+    _id: {
+      type: String,
+      default: () => 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    },
     voucherNumber: {
       type: String,
       required: true,
