@@ -10,7 +10,15 @@ export const getAccounts = async (req, res) => {
 
     if (mongoose.connection.readyState === 1) {
       try {
-        accounts = await Account.find().sort({ code: 1 });
+        const dbAccs = await Account.find().sort({ code: 1 });
+        accounts = dbAccs.map((acc) => {
+          const doc = acc.toObject ? acc.toObject() : acc;
+          const localMatch = localStore.data.accounts.find((la) => la.code === doc.code);
+          if (localMatch && localMatch.balance !== 0 && doc.balance === 0) {
+            doc.balance = localMatch.balance;
+          }
+          return doc;
+        });
       } catch {
         accounts = localStore.data.accounts || [];
       }

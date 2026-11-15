@@ -18,7 +18,15 @@ export const getDashboardSummary = async (req, res) => {
       try {
         invoices = await Invoice.find();
         expenses = await Expense.find();
-        accounts = await Account.find();
+        const dbAccs = await Account.find();
+        accounts = dbAccs.map((acc) => {
+          const doc = acc.toObject ? acc.toObject() : acc;
+          const localMatch = localStore.data.accounts.find((la) => la.code === doc.code);
+          if (localMatch && localMatch.balance !== 0 && (doc.balance === 0 || doc.balance === undefined)) {
+            doc.balance = localMatch.balance;
+          }
+          return doc;
+        });
         auditLogs = await AuditLog.find().sort({ createdAt: -1 }).limit(8);
         users = await User.find({ isActive: true }).select('name email role location lastLogin');
       } catch (err) {

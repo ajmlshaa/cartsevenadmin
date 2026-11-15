@@ -247,6 +247,7 @@ export const Vouchers: React.FC = () => {
   const { formatMoney } = useCurrency();
 
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [liveAccounts, setLiveAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedMethod, setSelectedMethod] = useState<string>('all');
@@ -256,10 +257,10 @@ export const Vouchers: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // New Voucher Entry State
-  const [vType, setVType] = useState<VoucherType>('Payment Voucher');
+  const [vType, setVType] = useState<VoucherType>('Receipt Voucher');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [debitAccount, setDebitAccount] = useState('');
-  const [creditAccount, setCreditAccount] = useState('');
+  const [debitAccount, setDebitAccount] = useState('Bank Account - HDFC Current');
+  const [creditAccount, setCreditAccount] = useState('AJMALSHA Capital Account');
   const [amount, setAmount] = useState<number | ''>('');
   const [collectionMethod, setCollectionMethod] = useState<CollectionMethod>('Direct Bank Transfer (NEFT/RTGS)');
   const [partyName, setPartyName] = useState('');
@@ -299,8 +300,20 @@ export const Vouchers: React.FC = () => {
     }
   };
 
+  const fetchAccounts = async () => {
+    try {
+      const res = await request<{ success: boolean; data: any[] }>('/accounts');
+      if (res.success && res.data) {
+        setLiveAccounts(res.data);
+      }
+    } catch {
+      // offline
+    }
+  };
+
   useEffect(() => {
     fetchVouchers();
+    fetchAccounts();
   }, [selectedType, selectedMethod, searchTerm]);
 
   // Switch voucher type
@@ -309,39 +322,163 @@ export const Vouchers: React.FC = () => {
     const cfg = VOUCHER_CONFIGS[type];
     if (cfg) {
       setCollectionMethod(cfg.defaultMethod);
+      if (type === 'Receipt Voucher') {
+        setDebitAccount('Bank Account - HDFC Current');
+        setCreditAccount('AJMALSHA Capital Account');
+        setNarration('Receipt deposited into HDFC Current Account');
+      } else if (type === 'Payment Voucher') {
+        setDebitAccount('Supplier Payable');
+        setCreditAccount('Bank Account - HDFC Current');
+        setNarration('Payment issued from HDFC Current Account');
+      } else if (type === 'Contra Voucher') {
+        setDebitAccount('Bank Account - HDFC Current');
+        setCreditAccount('Cash in Hand');
+        setNarration('Cash in hand deposited into HDFC Current Account');
+      } else if (type === 'Purchase Voucher') {
+        setDebitAccount('Purchase Account');
+        setCreditAccount('Supplier Payable');
+        setNarration('Merchandise stock purchase');
+      } else if (type === 'Sales Voucher') {
+        setDebitAccount('Payment Gateway Clearing');
+        setCreditAccount('Product Sales Account');
+        setNarration('E-commerce sales order');
+      }
     }
+  };
+
+  // Quick Preset Handlers
+  const applyPreset = (preset: string) => {
+    switch (preset) {
+      case 'capital_ajmalsha':
+        setVType('Receipt Voucher');
+        setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
+        setDebitAccount('Bank Account - HDFC Current');
+        setCreditAccount('AJMALSHA Capital Account');
+        setPartyName('AJMALSHA');
+        setNarration('Initial partner capital deposit into HDFC Current Account');
+        break;
+      case 'capital_ashique':
+        setVType('Receipt Voucher');
+        setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
+        setDebitAccount('Bank Account - HDFC Current');
+        setCreditAccount('ASHIQUE SALIM Capital Account');
+        setPartyName('ASHIQUE SALIM');
+        setNarration('Partner capital deposit into HDFC Current Account');
+        break;
+      case 'capital_shanu':
+        setVType('Receipt Voucher');
+        setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
+        setDebitAccount('Bank Account - HDFC Current');
+        setCreditAccount('SHANU Capital Account');
+        setPartyName('SHANU');
+        setNarration('Partner capital deposit into HDFC Current Account');
+        break;
+      case 'drawings_ajmalsha':
+        setVType('Payment Voucher');
+        setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
+        setDebitAccount('AJMALSHA Drawings Account');
+        setCreditAccount('Bank Account - HDFC Current');
+        setPartyName('AJMALSHA');
+        setNarration('Partner profit drawings withdrawal from HDFC Bank');
+        break;
+      case 'drawings_ashique':
+        setVType('Payment Voucher');
+        setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
+        setDebitAccount('ASHIQUE SALIM Drawings Account');
+        setCreditAccount('Bank Account - HDFC Current');
+        setPartyName('ASHIQUE SALIM');
+        setNarration('Partner profit drawings withdrawal from HDFC Bank');
+        break;
+      case 'drawings_shanu':
+        setVType('Payment Voucher');
+        setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
+        setDebitAccount('SHANU Drawings Account');
+        setCreditAccount('Bank Account - HDFC Current');
+        setPartyName('SHANU');
+        setNarration('Partner profit drawings withdrawal from HDFC Bank');
+        break;
+      case 'inventory':
+        setVType('Purchase Voucher');
+        setCollectionMethod('Credit / Journal Adjustment');
+        setDebitAccount('Purchase Account');
+        setCreditAccount('Supplier Payable');
+        setPartyName('Merchandise Supplier');
+        setNarration('Purchase of merchandise inventory');
+        break;
+      case 'ads':
+        setVType('Payment Voucher');
+        setCollectionMethod('Online Payment Gateway (Razorpay/Stripe)');
+        setDebitAccount('Advertising and Marketing');
+        setCreditAccount('Bank Account - HDFC Current');
+        setPartyName('Meta Platforms Inc / Google Ads');
+        setNarration('Customer acquisition digital ad spend');
+        break;
+      case 'courier':
+        setVType('Payment Voucher');
+        setCollectionMethod('Online Payment Gateway (Razorpay/Stripe)');
+        setDebitAccount('Shipping and Delivery Charges (Outward)');
+        setCreditAccount('Bank Account - HDFC Current');
+        setPartyName('Delhivery / Blue Dart Courier');
+        setNarration('Freight delivery logistics charges');
+        break;
+      case 'contra_deposit':
+        setVType('Contra Voucher');
+        setCollectionMethod('Cash in Hand');
+        setDebitAccount('Bank Account - HDFC Current');
+        setCreditAccount('Cash in Hand');
+        setPartyName('Cash Deposit');
+        setNarration('Cash in hand deposited into HDFC Current Account');
+        break;
+    }
+    setTimeout(() => {
+      amountInputRef.current?.focus();
+    }, 50);
   };
 
   // Switch to voucher mode and open modal
   const openVoucherCreation = (type?: VoucherType) => {
     if (type) {
       handleSelectVoucherType(type);
+    } else {
+      handleSelectVoucherType('Receipt Voucher');
     }
-    setDebitAccount('');
-    setCreditAccount('');
     setAmount('');
     setPartyName('');
-    setNarration('');
     setShowModal(true);
     setShowAcceptPrompt(false);
     setTimeout(() => {
-      dateInputRef.current?.focus();
+      partyInputRef.current?.focus();
     }, 100);
   };
 
-  // Helper to find balance for an account
+  // Helper to find balance for an account (reading real-time live balances)
   const getAccountBalanceDisplay = (ledgerName: string) => {
     const trimmed = ledgerName.trim().toLowerCase();
     if (!trimmed) return null;
-    const ledger = ALL_LEDGER_ACCOUNTS.find(
-      (l) => l.name.toLowerCase() === trimmed || trimmed.includes(l.name.toLowerCase()) || l.name.toLowerCase().includes(trimmed)
-    );
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const qNorm = norm(trimmed);
+    const ledger =
+      liveAccounts.find(
+        (a) =>
+          norm(a.name) === qNorm ||
+          norm(a.code) === qNorm ||
+          norm(a.name).includes(qNorm) ||
+          qNorm.includes(norm(a.name))
+      ) ||
+      ALL_LEDGER_ACCOUNTS.find(
+        (l) =>
+          norm(l.name) === qNorm ||
+          norm(l.code) === qNorm ||
+          norm(l.name).includes(qNorm) ||
+          qNorm.includes(norm(l.name))
+      );
     if (!ledger) return null;
-    const isDebit = ['Asset', 'Expense'].includes(ledger.type) ? ledger.balance >= 0 : ledger.balance < 0;
+    const bal = Number(ledger.balance) || 0;
+    const isDebit = ['Asset', 'Expense'].includes(ledger.type) ? bal >= 0 : bal < 0;
     return {
-      formatted: `${formatMoney(Math.abs(ledger.balance))} ${isDebit ? 'Dr' : 'Cr'}`,
+      formatted: `${formatMoney(Math.abs(bal))} ${isDebit ? 'Dr' : 'Cr'}`,
       isDebit,
-      group: ledger.groupTitle,
+      group: ledger.subType || ledger.groupTitle || ledger.type,
       code: ledger.code,
     };
   };
@@ -407,8 +544,9 @@ export const Vouchers: React.FC = () => {
       setToastMessage(`✓ Voucher ${postedVoucherNo} accepted & posted! (${formatMoney(Number(amount))})`);
       setTimeout(() => setToastMessage(null), 4500);
 
-      // Refresh list
+      // Refresh list & live ledger balances
       fetchVouchers();
+      fetchAccounts();
 
       // Reset for consecutive rapid entry
       setShowAcceptPrompt(false);
@@ -877,6 +1015,75 @@ export const Vouchers: React.FC = () => {
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Quick Accounting Entry Presets */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-xs space-y-2">
+                <div className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-slate-700">
+                    <Sparkles className="w-3.5 h-3.5 text-[#FF5500]" />
+                    <span>Quick Accounting Presets (Instant Fill)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">Click to auto-configure debit & credit</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('capital_ajmalsha')}
+                    className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>+ Capital: AJMALSHA</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('capital_ashique')}
+                    className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>+ Capital: ASHIQUE SALIM</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('capital_shanu')}
+                    className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>+ Capital: SHANU</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('drawings_ajmalsha')}
+                    className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200/80 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>- Drawings: AJMALSHA</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('inventory')}
+                    className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200/80 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>📦 Stock / Supplier Bill</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('ads')}
+                    className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200/80 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>📢 Meta / Google Ads</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('courier')}
+                    className="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200/80 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>🚚 Courier Freight</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('contra_deposit')}
+                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>🔄 Cash to Bank</span>
+                  </button>
+                </div>
               </div>
 
               {/* Form Fields Card */}

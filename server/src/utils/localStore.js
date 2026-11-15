@@ -100,6 +100,74 @@ const INITIAL_USERS = [
   },
 ];
 
+export const findAccount = (accounts, query) => {
+  if (!query) return null;
+  const q = String(query).toLowerCase().trim();
+  // 1. Match code exactly
+  let match = accounts.find((a) => a.code.toLowerCase() === q);
+  if (match) return match;
+  // 2. Match exact name
+  match = accounts.find((a) => a.name.toLowerCase() === q);
+  if (match) return match;
+  // 3. Match normalized name (ignoring non-alphanumeric)
+  const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const qNorm = norm(q);
+  match = accounts.find((a) => norm(a.name) === qNorm);
+  if (match) return match;
+  // 4. Substring normalized
+  match = accounts.find((a) => norm(a.name).includes(qNorm) || qNorm.includes(norm(a.name)));
+  if (match) return match;
+  // 5. Keyword heuristics
+  if (q.includes('hdfc') || (q.includes('bank') && !q.includes('charge') && !q.includes('loan'))) {
+    return accounts.find((a) => a.code === '1020');
+  }
+  if (q.includes('cash') && !q.includes('discount')) {
+    return accounts.find((a) => a.code === '1010');
+  }
+  if (q.includes('ajmalsha') && (q.includes('capital') || q.includes('equity'))) {
+    return accounts.find((a) => a.code === '2011');
+  }
+  if (q.includes('ashique') && (q.includes('capital') || q.includes('equity'))) {
+    return accounts.find((a) => a.code === '2012');
+  }
+  if (q.includes('shanu') && (q.includes('capital') || q.includes('equity'))) {
+    return accounts.find((a) => a.code === '2013');
+  }
+  if (q.includes('ajmalsha') && q.includes('drawing')) {
+    return accounts.find((a) => a.code === '2021');
+  }
+  if (q.includes('ashique') && q.includes('drawing')) {
+    return accounts.find((a) => a.code === '2022');
+  }
+  if (q.includes('shanu') && q.includes('drawing')) {
+    return accounts.find((a) => a.code === '2023');
+  }
+  if (q.includes('supplier') || q.includes('payable')) {
+    return accounts.find((a) => a.code === '2035' || a.code === '2030');
+  }
+  if (q.includes('receivable') || q.includes('customer')) {
+    return accounts.find((a) => a.code === '1060');
+  }
+  if (q.includes('sales') && !q.includes('return')) {
+    return accounts.find((a) => a.code === '3010');
+  }
+  if (q.includes('purchase') && !q.includes('return')) {
+    return accounts.find((a) => a.code === '4010');
+  }
+  return null;
+};
+
+export const applyBalanceChange = (account, isDebit, amount) => {
+  if (!account) return;
+  const num = Number(amount) || 0;
+  if (['Asset', 'Expense'].includes(account.type)) {
+    account.balance = Math.round(((Number(account.balance) || 0) + (isDebit ? num : -num)) * 100) / 100;
+  } else {
+    // Liability, Equity, Revenue
+    account.balance = Math.round(((Number(account.balance) || 0) + (isDebit ? -num : num)) * 100) / 100;
+  }
+};
+
 class LocalStore {
   constructor() {
     this.data = {
@@ -149,12 +217,68 @@ class LocalStore {
               )
           ),
         };
+        this.recalculateBalances();
       } else {
         this.save();
       }
     } catch (err) {
       console.warn('LocalStore load error:', err.message);
     }
+  }
+
+  recalculateBalances() {
+    // Reset all account balances to 0
+    this.data.accounts.forEach((a) => {
+      a.balance = 0;
+    });
+
+    // Replay all posted vouchers in chronological order
+    const sortedVouchers = [...(this.data.vouchers || [])].sort(
+      (a, b) => new Date(a.date || a.createdAt).getTime() - new Date(b.date || b.createdAt).getTime()
+    );
+
+    sortedVouchers.forEach((v) => {
+      if (v.status !== 'cancelled') {
+        const drAcc = findAccount(this.data.accounts, v.debitAccount);
+        const crAcc = findAccount(this.data.accounts, v.creditAccount);
+        if (drAcc) applyBalanceChange(drAcc, true, v.amount);
+        if (crAcc) applyBalanceChange(crAcc, false, v.amount);
+      }
+    });
+
+    // Replay all expenses
+    (this.data.expenses || []).forEach((exp) => {
+      const expAcc = this.data.accounts.find(
+        (a) => a.code === '5010' || a.name.toLowerCase().includes((exp.category || '').toLowerCase())
+      );
+      if (expAcc) applyBalanceChange(expAcc, true, exp.amount);
+
+      const isCash = String(exp.paymentMethod || '').toLowerCase().includes('cash');
+      const payAcc = isCash
+        ? this.data.accounts.find((a) => a.code === '1010')
+        : this.data.accounts.find((a) => a.code === '1020');
+      if (payAcc) applyBalanceChange(payAcc, false, exp.amount);
+    });
+
+    // Replay all invoices
+    (this.data.invoices || []).forEach((inv) => {
+      const salesAcc = this.data.accounts.find((a) => a.code === '3010');
+      if (salesAcc) applyBalanceChange(salesAcc, false, inv.subtotal || inv.totalAmount);
+
+      const taxAcc = this.data.accounts.find((a) => a.code === '2050');
+      if (taxAcc && inv.taxAmount) applyBalanceChange(taxAcc, false, inv.taxAmount);
+
+      const paid = Number(inv.amountPaid) || (inv.status === 'paid' ? inv.totalAmount : 0);
+      if (paid > 0) {
+        const bankAcc = this.data.accounts.find((a) => a.code === '1020');
+        if (bankAcc) applyBalanceChange(bankAcc, true, paid);
+      }
+      const due = (Number(inv.totalAmount) || 0) - paid;
+      if (due > 0) {
+        const arAcc = this.data.accounts.find((a) => a.code === '1060');
+        if (arAcc) applyBalanceChange(arAcc, true, due);
+      }
+    });
   }
 
   save() {
