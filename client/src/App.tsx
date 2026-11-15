@@ -43,9 +43,10 @@ const ProtectedLayout: React.FC = () => {
       <Navbar />
       <main className="flex-1 pb-16">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/vouchers" element={<Vouchers />} />
-          <Route path="/transactions" element={<Navigate to="/vouchers" replace />} />
+          <Route path="/" element={<Vouchers />} />
+          <Route path="/vouchers" element={<Navigate to="/" replace />} />
+          <Route path="/transactions" element={<Navigate to="/" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/expenses" element={<Expenses />} />

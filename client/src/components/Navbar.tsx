@@ -17,8 +17,7 @@ export const Navbar: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const navLinks = [
-    { label: 'Dashboard', to: '/' },
-    { label: 'Transactions', to: '/vouchers' },
+    { label: 'Transactions', to: '/' },
     { label: 'Invoices', to: '/invoices' },
     { label: 'Expenses', to: '/expenses' },
     { label: 'Registers', to: '/registers' },
@@ -82,6 +81,7 @@ export const Navbar: React.FC = () => {
               <NavLink
                 key={link.to}
                 to={link.to}
+                end={link.to === '/'}
                 className={({ isActive }) =>
                   `text-sm font-semibold px-3 py-2 rounded-xl transition-colors ${
                     isActive
@@ -185,6 +185,7 @@ export const Navbar: React.FC = () => {
           <NavLink
             key={link.to}
             to={link.to}
+            end={link.to === '/'}
             className={({ isActive }) =>
               `whitespace-nowrap px-3 py-1.5 rounded-lg font-semibold transition ${
                 isActive ? 'bg-[#FF5500] text-white font-bold' : 'text-slate-600 hover:text-slate-900'
