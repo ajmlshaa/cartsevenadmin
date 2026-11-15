@@ -156,7 +156,7 @@ describe('CartSeven Backend API Test Suite', () => {
       const voucherData = {
         type: 'Receipt Voucher',
         date: new Date().toISOString(),
-        debitAccount: 'Bank Account - HDFC Current',
+        debitAccount: 'Bank Account - Central Bank Current',
         creditAccount: 'AJMALSHA Capital Account',
         amount: 25000,
         collectionMethod: 'Direct Bank Transfer (NEFT/RTGS)',

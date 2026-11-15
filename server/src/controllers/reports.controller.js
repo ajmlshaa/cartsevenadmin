@@ -157,7 +157,7 @@ export const getBalanceSheet = async (req, res) => {
 
     const currentAssetsList = [
       { name: 'Cash in Hand', amount: findBal('1010') },
-      { name: 'Bank Account (HDFC Current)', amount: findBal('1020') },
+      { name: 'Bank Account (Central Bank Current)', amount: findBal('1020') },
       { name: 'COD Receivable', amount: findBal('1030') },
       { name: 'Payment Gateway Clearing', amount: findBal('1040') },
       { name: 'Marketplace Clearing', amount: findBal('1050') },

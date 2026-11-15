@@ -10,7 +10,7 @@ const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const INITIAL_ACCOUNTS = [
   // Asset Accounts (Balance: 0)
   { code: '1010', name: 'Cash in Hand', type: 'Asset', subType: 'Cash Asset', balance: 0, currency: 'INR' },
-  { code: '1020', name: 'Bank Account - HDFC Current', type: 'Asset', subType: 'Bank Account', balance: 0, currency: 'INR' },
+  { code: '1020', name: 'Bank Account - Central Bank Current', type: 'Asset', subType: 'Bank Account', balance: 0, currency: 'INR' },
   { code: '1030', name: 'COD Receivable', type: 'Asset', subType: 'Current Asset', balance: 0, currency: 'INR' },
   { code: '1040', name: 'Payment Gateway Clearing', type: 'Asset', subType: 'Current Asset', balance: 0, currency: 'INR' },
   { code: '1050', name: 'Marketplace Clearing', type: 'Asset', subType: 'Current Asset', balance: 0, currency: 'INR' },
@@ -118,7 +118,7 @@ export const findAccount = (accounts, query) => {
   match = accounts.find((a) => norm(a.name).includes(qNorm) || qNorm.includes(norm(a.name)));
   if (match) return match;
   // 5. Keyword heuristics
-  if (q.includes('hdfc') || (q.includes('bank') && !q.includes('charge') && !q.includes('loan'))) {
+  if (q.includes('central') || q.includes('cbi') || q.includes('hdfc') || (q.includes('bank') && !q.includes('charge') && !q.includes('loan'))) {
     return accounts.find((a) => a.code === '1020');
   }
   if (q.includes('cash') && !q.includes('discount')) {

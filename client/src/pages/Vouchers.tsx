@@ -122,9 +122,9 @@ export const VOUCHER_CONFIGS: Record<
     badgeText: 'text-amber-700',
     badgeBorder: 'border-amber-200',
     defaultDebit: 'Cash in Hand (Petty Cash Float)',
-    defaultCredit: 'Bank Account (HDFC Current Account)',
+    defaultCredit: 'Bank Account - Central Bank Current',
     defaultMethod: 'Cash in Hand',
-    defaultNarration: 'Being cash withdrawn from HDFC Current Account for store petty cash float.',
+    defaultNarration: 'Being cash withdrawn from Central Bank Current Account for store petty cash float.',
     debitLabel: 'Debit Account (Dr - Receiving Account)',
     creditLabel: 'Credit Account (Cr - Paying Account)',
   },
@@ -138,7 +138,7 @@ export const VOUCHER_CONFIGS: Record<
     badgeText: 'text-rose-700',
     badgeBorder: 'border-rose-200',
     defaultDebit: 'Supplier Payable',
-    defaultCredit: 'Bank Account (HDFC Current Account)',
+    defaultCredit: 'Bank Account - Central Bank Current',
     defaultMethod: 'Direct Bank Transfer (NEFT/RTGS)',
     defaultNarration: 'Being payment made towards supplier invoice.',
     debitLabel: 'Debit Account (Dr - Expense / Supplier)',
@@ -153,7 +153,7 @@ export const VOUCHER_CONFIGS: Record<
     badgeBg: 'bg-emerald-50',
     badgeText: 'text-emerald-700',
     badgeBorder: 'border-emerald-200',
-    defaultDebit: 'Bank Account (HDFC Current Account)',
+    defaultDebit: 'Bank Account - Central Bank Current',
     defaultCredit: 'Accounts Receivable (Customers)',
     defaultMethod: 'Direct Bank Transfer (NEFT/RTGS)',
     defaultNarration: 'Being payment received from customer against sales order.',
@@ -259,7 +259,7 @@ export const Vouchers: React.FC = () => {
   // New Voucher Entry State
   const [vType, setVType] = useState<VoucherType>('Receipt Voucher');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [debitAccount, setDebitAccount] = useState('Bank Account - HDFC Current');
+  const [debitAccount, setDebitAccount] = useState('Bank Account - Central Bank Current');
   const [creditAccount, setCreditAccount] = useState('AJMALSHA Capital Account');
   const [amount, setAmount] = useState<number | ''>('');
   const [collectionMethod, setCollectionMethod] = useState<CollectionMethod>('Direct Bank Transfer (NEFT/RTGS)');
@@ -323,17 +323,17 @@ export const Vouchers: React.FC = () => {
     if (cfg) {
       setCollectionMethod(cfg.defaultMethod);
       if (type === 'Receipt Voucher') {
-        setDebitAccount('Bank Account - HDFC Current');
+        setDebitAccount('Bank Account - Central Bank Current');
         setCreditAccount('AJMALSHA Capital Account');
-        setNarration('Receipt deposited into HDFC Current Account');
+        setNarration('Receipt deposited into Central Bank Current Account');
       } else if (type === 'Payment Voucher') {
         setDebitAccount('Supplier Payable');
-        setCreditAccount('Bank Account - HDFC Current');
-        setNarration('Payment issued from HDFC Current Account');
+        setCreditAccount('Bank Account - Central Bank Current');
+        setNarration('Payment issued from Central Bank Current Account');
       } else if (type === 'Contra Voucher') {
-        setDebitAccount('Bank Account - HDFC Current');
+        setDebitAccount('Bank Account - Central Bank Current');
         setCreditAccount('Cash in Hand');
-        setNarration('Cash in hand deposited into HDFC Current Account');
+        setNarration('Cash in hand deposited into Central Bank Current Account');
       } else if (type === 'Purchase Voucher') {
         setDebitAccount('Purchase Account');
         setCreditAccount('Supplier Payable');
@@ -352,50 +352,50 @@ export const Vouchers: React.FC = () => {
       case 'capital_ajmalsha':
         setVType('Receipt Voucher');
         setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
-        setDebitAccount('Bank Account - HDFC Current');
+        setDebitAccount('Bank Account - Central Bank Current');
         setCreditAccount('AJMALSHA Capital Account');
         setPartyName('AJMALSHA');
-        setNarration('Initial partner capital deposit into HDFC Current Account');
+        setNarration('Initial partner capital deposit into Central Bank Current Account');
         break;
       case 'capital_ashique':
         setVType('Receipt Voucher');
         setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
-        setDebitAccount('Bank Account - HDFC Current');
+        setDebitAccount('Bank Account - Central Bank Current');
         setCreditAccount('ASHIQUE SALIM Capital Account');
         setPartyName('ASHIQUE SALIM');
-        setNarration('Partner capital deposit into HDFC Current Account');
+        setNarration('Partner capital deposit into Central Bank Current Account');
         break;
       case 'capital_shanu':
         setVType('Receipt Voucher');
         setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
-        setDebitAccount('Bank Account - HDFC Current');
+        setDebitAccount('Bank Account - Central Bank Current');
         setCreditAccount('SHANU Capital Account');
         setPartyName('SHANU');
-        setNarration('Partner capital deposit into HDFC Current Account');
+        setNarration('Partner capital deposit into Central Bank Current Account');
         break;
       case 'drawings_ajmalsha':
         setVType('Payment Voucher');
         setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
         setDebitAccount('AJMALSHA Drawings Account');
-        setCreditAccount('Bank Account - HDFC Current');
+        setCreditAccount('Bank Account - Central Bank Current');
         setPartyName('AJMALSHA');
-        setNarration('Partner profit drawings withdrawal from HDFC Bank');
+        setNarration('Partner profit drawings withdrawal from Central Bank');
         break;
       case 'drawings_ashique':
         setVType('Payment Voucher');
         setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
         setDebitAccount('ASHIQUE SALIM Drawings Account');
-        setCreditAccount('Bank Account - HDFC Current');
+        setCreditAccount('Bank Account - Central Bank Current');
         setPartyName('ASHIQUE SALIM');
-        setNarration('Partner profit drawings withdrawal from HDFC Bank');
+        setNarration('Partner profit drawings withdrawal from Central Bank');
         break;
       case 'drawings_shanu':
         setVType('Payment Voucher');
         setCollectionMethod('Direct Bank Transfer (NEFT/RTGS)');
         setDebitAccount('SHANU Drawings Account');
-        setCreditAccount('Bank Account - HDFC Current');
+        setCreditAccount('Bank Account - Central Bank Current');
         setPartyName('SHANU');
-        setNarration('Partner profit drawings withdrawal from HDFC Bank');
+        setNarration('Partner profit drawings withdrawal from Central Bank');
         break;
       case 'inventory':
         setVType('Purchase Voucher');
@@ -409,7 +409,7 @@ export const Vouchers: React.FC = () => {
         setVType('Payment Voucher');
         setCollectionMethod('Online Payment Gateway (Razorpay/Stripe)');
         setDebitAccount('Advertising and Marketing');
-        setCreditAccount('Bank Account - HDFC Current');
+        setCreditAccount('Bank Account - Central Bank Current');
         setPartyName('Meta Platforms Inc / Google Ads');
         setNarration('Customer acquisition digital ad spend');
         break;
@@ -417,17 +417,17 @@ export const Vouchers: React.FC = () => {
         setVType('Payment Voucher');
         setCollectionMethod('Online Payment Gateway (Razorpay/Stripe)');
         setDebitAccount('Shipping and Delivery Charges (Outward)');
-        setCreditAccount('Bank Account - HDFC Current');
+        setCreditAccount('Bank Account - Central Bank Current');
         setPartyName('Delhivery / Blue Dart Courier');
         setNarration('Freight delivery logistics charges');
         break;
       case 'contra_deposit':
         setVType('Contra Voucher');
         setCollectionMethod('Cash in Hand');
-        setDebitAccount('Bank Account - HDFC Current');
+        setDebitAccount('Bank Account - Central Bank Current');
         setCreditAccount('Cash in Hand');
         setPartyName('Cash Deposit');
-        setNarration('Cash in hand deposited into HDFC Current Account');
+        setNarration('Cash in hand deposited into Central Bank Current Account');
         break;
     }
     setTimeout(() => {

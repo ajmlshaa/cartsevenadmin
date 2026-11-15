@@ -27,7 +27,7 @@ export const SettingsPage: React.FC = () => {
   const [fiscalYearStart, setFiscalYearStart] = useState('4'); // April (Indian FY)
   const [invoicePrefix, setInvoicePrefix] = useState('INV-2026-');
   const [panNumber, setPanNumber] = useState('AABCU9603R');
-  const [bankAccount, setBankAccount] = useState('HDFC Bank Current A/c - 50200084920194');
+  const [bankAccount, setBankAccount] = useState('Central Bank of India Current A/c');
   const [registeredAddress, setRegisteredAddress] = useState('CartSeven Commerce Center, Bandra Kurla Complex, Mumbai, Maharashtra 400051');
 
   useEffect(() => {

@@ -145,7 +145,7 @@ export const getRegistersData = async (req, res) => {
         grossAmount: inv.amountPaid,
         gatewayFee: 0,
         netSettlement: inv.amountPaid,
-        accountCredited: 'Bank Account - HDFC Current',
+        accountCredited: 'Bank Account - Central Bank Current',
         settlementStatus: 'Cleared',
       })),
       ...vouchers.filter((v) => v.type === 'Receipt Voucher').map((rv, idx) => ({
@@ -157,7 +157,7 @@ export const getRegistersData = async (req, res) => {
         grossAmount: rv.amount,
         gatewayFee: 0,
         netSettlement: rv.amount,
-        accountCredited: rv.debitAccount || 'Bank Account - HDFC Current',
+        accountCredited: rv.debitAccount || 'Bank Account - Central Bank Current',
         settlementStatus: 'Cleared',
       })),
     ];
@@ -182,7 +182,7 @@ export const getRegistersData = async (req, res) => {
     const bankAcc = accounts.find((a) => a.code === '1020');
     const bankBalance = bankAcc?.balance || 0;
     const bankReconciliation = {
-      bankName: 'HDFC Bank Corporate Current A/C #99401294',
+      bankName: 'Central Bank of India Corporate Current A/C',
       period: 'Current Period',
       bankBookBalance: bankBalance,
       bankStatementBalance: bankBalance,

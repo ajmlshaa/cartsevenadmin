@@ -96,7 +96,7 @@ export const ESSENTIAL_LEDGER_GROUPS = [
     badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
     accounts: [
       { code: '1010', name: 'Cash in Hand (Petty Cash Float)', subType: 'Cash Asset', balance: 0, type: 'Asset' },
-      { code: '1020', name: 'Bank Account (HDFC Current Account)', subType: 'Bank Account', balance: 0, type: 'Asset' },
+      { code: '1020', name: 'Bank Account - Central Bank Current', subType: 'Bank Account', balance: 0, type: 'Asset' },
       { code: '1030', name: 'COD Receivable (Couriers)', subType: 'Current Asset', balance: 0, type: 'Asset' },
       { code: '1040', name: 'Payment Gateway Clearing', subType: 'Current Asset', balance: 0, type: 'Asset' },
       { code: '1050', name: 'Marketplace Clearing', subType: 'Current Asset', balance: 0, type: 'Asset' },

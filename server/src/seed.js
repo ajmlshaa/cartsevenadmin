@@ -14,7 +14,7 @@ dotenv.config();
 const INITIAL_ACCOUNTS = [
   // Assets (Starting balance: 0)
   { code: '1010', name: 'Cash in Hand', type: 'Asset', subType: 'Cash Asset', balance: 0, currency: 'INR' },
-  { code: '1020', name: 'Bank Account - HDFC Current', type: 'Asset', subType: 'Bank Account', balance: 0, currency: 'INR' },
+  { code: '1020', name: 'Bank Account - Central Bank Current', type: 'Asset', subType: 'Bank Account', balance: 0, currency: 'INR' },
   { code: '1030', name: 'COD Receivable', type: 'Asset', subType: 'Current Asset', balance: 0, currency: 'INR' },
   { code: '1040', name: 'Payment Gateway Clearing', type: 'Asset', subType: 'Current Asset', balance: 0, currency: 'INR' },
   { code: '1050', name: 'Marketplace Clearing', type: 'Asset', subType: 'Current Asset', balance: 0, currency: 'INR' },
