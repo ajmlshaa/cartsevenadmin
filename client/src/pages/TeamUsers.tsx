@@ -15,7 +15,7 @@ import { request } from '../services/api';
 import { User } from '../types';
 
 export const TeamUsers: React.FC = () => {
-  const { user: currentUser, switchUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>(Object.values(DEMO_USERS).filter(
     (u, index, self) => index === self.findIndex((t) => t._id === u._id)
   ));
@@ -177,17 +177,16 @@ export const TeamUsers: React.FC = () => {
               </div>
 
               <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-[11px] text-slate-400 font-medium">Switch Session:</span>
-                <button
-                  onClick={() => switchUser(partnerKey)}
-                  className={`text-xs font-bold px-4 py-2 rounded-full transition ${
+                <span className="text-[11px] text-slate-400 font-medium">Access Status:</span>
+                <span
+                  className={`text-xs font-bold px-3 py-1.5 rounded-full ${
                     isCurrent
-                      ? 'bg-slate-100 text-slate-400 cursor-default'
-                      : 'bg-[#FF5500] hover:bg-[#E04B00] text-white shadow-md shadow-orange-500/20 active:scale-[0.98]'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-slate-100 text-slate-600'
                   }`}
                 >
-                  {isCurrent ? 'Current' : `Switch to ${u.name}`}
-                </button>
+                  {isCurrent ? 'Currently Active' : 'Authorized Partner'}
+                </span>
               </div>
             </div>
           );

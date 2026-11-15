@@ -82,16 +82,17 @@ npm run dev
 
 ---
 
-## 👥 Default Login Credentials
+## 👥 Authorized Partner Credentials (Secured in `.env`)
 
-All users share the default development password: `password123`.  
-*(You can also use the **1-Click Test Access** buttons directly on the login screen).*
+Access to this system is strictly limited to the **3 registered company partners**. All credentials, passwords, and partner access policies are configured and secured in [`server/.env`](file:///C:/Users/Alsha/Desktop/AJMAL%20WORKS/Personal%20work/WORKS/CartSeven/server/.env). 
 
-| Name | Role | Email | Branch Location |
+> **Access Control Policy**: Any unauthorized visitor or non-partner email is blocked and automatically presented with a redirection page to the official public store at [https://cartseven.com/](https://cartseven.com/).
+
+| Partner Name | Role | Configured Email | Password (`.env`) |
 | :--- | :--- | :--- | :--- |
-| **Sarah Jenkins** | Admin | `admin@cartseven.com` | 🇺🇸 HQ - New York, US |
-| **Marcus Vance** | Accountant | `accountant@cartseven.com` | 🇬🇧 Finance Hub - London, UK |
-| **Tariq Al-Mansoor** | Manager | `manager@cartseven.com` | 🇦🇪 Operations - Dubai, UAE |
+| **AJMALSHA** | Managing Partner (Admin) | `ajmalsha@cartseven.com` | `password123` |
+| **ASHIQUE SALIM** | Finance Partner (Accountant) | `ashique@cartseven.com` | `password123` |
+| **SHANU** | Operations Partner (Manager) | `shanu@cartseven.com` | `password123` |
 
 ---
 

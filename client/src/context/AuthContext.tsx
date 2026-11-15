@@ -2,12 +2,20 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { request, setAuthToken, getAuthToken } from '../services/api';
 
+export interface LoginResult {
+  success: boolean;
+  message?: string;
+  redirectUrl?: string;
+  isRestricted?: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password?: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => void;
+  updateProfile: (data: { name?: string; phone?: string; location?: string }) => Promise<boolean>;
   switchUser: (targetKey: string) => Promise<void>;
   updateUserLocation: (location: string) => Promise<void>;
 }
@@ -63,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initAuth = async () => {
       const storedToken = getAuthToken();
       if (!storedToken) {
-        setUser(DEMO_USERS.partner1);
+        setUser(null);
         setLoading(false);
         return;
       }
@@ -73,11 +81,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (res.success && res.user) {
           setUser(res.user);
         } else {
-          setUser(DEMO_USERS.partner1);
+          setUser(null);
         }
       } catch {
-        const storedRole = localStorage.getItem('cartseven_role') || 'partner1';
-        setUser(DEMO_USERS[storedRole] || DEMO_USERS.partner1);
+        if (storedToken.startsWith('mock_jwt_')) {
+          const storedRole = localStorage.getItem('cartseven_role') || 'partner1';
+          setUser(DEMO_USERS[storedRole] || null);
+        } else {
+          setUser(null);
+        }
       } finally {
         setLoading(false);
       }
@@ -86,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string = 'password123'): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     setLoading(true);
     try {
       const res = await request<{ success: boolean; token: string; user: User }>('/auth/login', {
@@ -94,26 +106,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, password }),
       });
 
-      if (res.success) {
+      if (res.success && res.token && res.user) {
         setToken(res.token);
         setAuthToken(res.token);
         setUser(res.user);
         localStorage.setItem('cartseven_role', res.user.role);
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch {
-      // In offline mode / local mock login
-      const matched = Object.values(DEMO_USERS).find((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (matched) {
-        const mockToken = 'mock_jwt_' + matched.email;
-        setToken(mockToken);
-        setAuthToken(mockToken);
-        setUser(matched);
-        localStorage.setItem('cartseven_role', matched.role);
-        return true;
+      return { success: false, message: 'Invalid credentials' };
+    } catch (err: any) {
+      // Check if restricted/unauthorized visitor directed to https://cartseven.com/
+      if (err.status === 403 || err.data?.isUnauthorizedVisitor) {
+        return {
+          success: false,
+          message: err.message || 'Access Denied: Only authorized partners of CartSeven may access this portal.',
+          redirectUrl: err.redirectUrl || 'https://cartseven.com/',
+          isRestricted: true,
+        };
       }
-      return false;
+      return {
+        success: false,
+        message: err.message || 'Invalid email or password for partner account.',
+        redirectUrl: err.redirectUrl,
+      };
     } finally {
       setLoading(false);
     }
@@ -123,6 +138,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const target = DEMO_USERS[targetKey];
     if (target) {
       await login(target.email, 'password123');
+    }
+  };
+
+  const updateProfile = async (data: { name?: string; phone?: string; location?: string }): Promise<boolean> => {
+    try {
+      const res = await request<{ success: boolean; user: User }>('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      if (res.success && res.user) {
+        setUser(res.user);
+        return true;
+      }
+      return false;
+    } catch {
+      if (user) {
+        setUser({ ...user, ...data });
+        return true;
+      }
+      return false;
     }
   };
 
@@ -154,6 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         login,
         logout,
+        updateProfile,
         switchUser,
         updateUserLocation,
       }}

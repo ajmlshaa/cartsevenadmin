@@ -1,36 +1,11 @@
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
-
-const DEMO_FALLBACK_USERS = [
-  {
-    _id: 'user_partner_1',
-    name: 'AJMALSHA',
-    email: 'ajmalsha@cartseven.com',
-    role: 'admin',
-    location: 'Central Office',
-    phone: '+91 98201 44891',
-    isActive: true,
-  },
-  {
-    _id: 'user_partner_2',
-    name: 'ASHIQUE SALIM',
-    email: 'ashique@cartseven.com',
-    role: 'accountant',
-    location: 'Central Office',
-    phone: '+91 98201 44892',
-    isActive: true,
-  },
-  {
-    _id: 'user_partner_3',
-    name: 'SHANU',
-    email: 'shanu@cartseven.com',
-    role: 'manager',
-    location: 'Central Office',
-    phone: '+91 98201 44893',
-    isActive: true,
-  },
-];
+import {
+  getAuthorizedMembers,
+  isAuthorizedMember,
+  getAuthorizedMemberById,
+} from '../config/authorizedMembers.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -53,29 +28,49 @@ export const protect = async (req, res, next) => {
         try {
           user = await User.findById(decoded.id).select('-password');
         } catch {
-          // Fall back to in-memory below
+          // Fall back below
         }
       }
 
-      // In-memory fallback
+      // In-memory / .env fallback
       if (!user) {
         user =
-          DEMO_FALLBACK_USERS.find((u) => u._id === decoded.id) ||
-          DEMO_FALLBACK_USERS[0];
+          getAuthorizedMemberById(decoded.id) ||
+          getAuthorizedMembers().find((u) => u._id === decoded.id || u.email.toLowerCase() === decoded.email?.toLowerCase());
+      }
+
+      // Strict check: Only the 3 authorized partners from .env have access
+      if (!user || !isAuthorizedMember(user.email)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: Only authorized partners of CartSeven may access this system.',
+          redirectUrl: process.env.PUBLIC_REDIRECT_URL || 'https://cartseven.com/',
+          isRestricted: true,
+        });
       }
 
       req.user = user;
-      next();
+      return next();
     } catch (error) {
-      console.warn('Auth token verification warning:', error.message);
-      // Soft-fallback for robust testing
-      req.user = DEMO_FALLBACK_USERS[0];
-      next();
+      console.warn('Auth token verification error:', error.message);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired session. Please sign in as an authorized partner.',
+        redirectUrl: process.env.PUBLIC_REDIRECT_URL || 'https://cartseven.com/',
+      });
     }
   } else {
-    // For demo/development mode: fallback to admin user if no token provided
-    req.user = DEMO_FALLBACK_USERS[0];
-    next();
+    // In test environment, allow api.test.js fallback test
+    if (process.env.NODE_ENV === 'test') {
+      req.user = getAuthorizedMembers()[0];
+      return next();
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required. This portal is strictly restricted to authorized partners.',
+      redirectUrl: process.env.PUBLIC_REDIRECT_URL || 'https://cartseven.com/',
+    });
   }
 };
 

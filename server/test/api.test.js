@@ -69,6 +69,25 @@ describe('CartSeven Backend API Test Suite', () => {
         });
       expect([400, 401]).toContain(res.status);
     });
+
+    it('Rejects unauthorized non-partner user and directs to https://cartseven.com/', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'stranger@gmail.com',
+          password: 'password123',
+        });
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.redirectUrl).toBe('https://cartseven.com/');
+    });
+
+    it('Provides public access-info with redirect to https://cartseven.com/', async () => {
+      const res = await request(app).get('/api/auth/access-info');
+      expect(res.status).toBe(200);
+      expect(res.body.restricted).toBe(true);
+      expect(res.body.redirectUrl).toBe('https://cartseven.com/');
+    });
   });
 
   describe('3. Partners & Team Directory', () => {

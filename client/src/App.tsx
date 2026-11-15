@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { Navbar } from './components/Navbar';
 
+import { PublicRedirect } from './pages/PublicRedirect';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Vouchers } from './pages/Vouchers';
@@ -16,6 +17,7 @@ import { Reports } from './pages/Reports';
 import { TeamUsers } from './pages/TeamUsers';
 import { AuditLogs } from './pages/AuditLogs';
 import { SettingsPage } from './pages/SettingsPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 const ProtectedLayout: React.FC = () => {
   const { user, loading } = useAuth();
@@ -31,8 +33,9 @@ const ProtectedLayout: React.FC = () => {
     );
   }
 
+  // If anyone comes to this site without authenticated partner credentials, show the redirect page to https://cartseven.com/
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <PublicRedirect />;
   }
 
   return (
@@ -51,6 +54,7 @@ const ProtectedLayout: React.FC = () => {
           <Route path="/team" element={<TeamUsers />} />
           <Route path="/audit" element={<AuditLogs />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
@@ -64,6 +68,7 @@ export const App: React.FC = () => {
       <CurrencyProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/portal" element={<PublicRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/*" element={<ProtectedLayout />} />
           </Routes>

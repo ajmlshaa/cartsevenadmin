@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: cartseven
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUBLIC_REDIRECT_URL
+        value: https://cartseven.com/
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: PARTNER_1_NAME
+        value: AJMALSHA
+      - key: PARTNER_1_EMAIL
+        value: ajmalsha@cartseven.com
+      - key: PARTNER_1_PASSWORD
+        sync: false
+      - key: PARTNER_1_ROLE
+        value: admin
+      - key: PARTNER_2_NAME
+        value: ASHIQUE SALIM
+      - key: PARTNER_2_EMAIL
+        value: ashique@cartseven.com
+      - key: PARTNER_2_PASSWORD
+        sync: false
+      - key: PARTNER_2_ROLE
+        value: accountant
+      - key: PARTNER_3_NAME
+        value: SHANU
+      - key: PARTNER_3_EMAIL
+        value: shanu@cartseven.com
+      - key: PARTNER_3_PASSWORD
+        sync: false
+      - key: PARTNER_3_ROLE
+        value: manager

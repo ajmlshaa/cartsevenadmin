@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import { logAudit } from '../utils/auditHelper.js';
 import { localStore } from '../utils/localStore.js';
+import { getPublicAuthorizedMembers, isAuthorizedMember } from '../config/authorizedMembers.js';
 
 // @desc    Get all team users
 // @route   GET /api/users
@@ -17,6 +18,14 @@ export const getUsers = async (req, res) => {
     } else {
       users = (localStore.data.users || []).map(({ password, ...u }) => u);
     }
+
+    if (!users || users.length === 0) {
+      users = getPublicAuthorizedMembers();
+    } else {
+      const filtered = users.filter((u) => isAuthorizedMember(u.email));
+      users = filtered.length > 0 ? filtered : getPublicAuthorizedMembers();
+    }
+
     res.json({ success: true, data: users });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

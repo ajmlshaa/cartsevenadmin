@@ -2,52 +2,13 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import { logAudit } from '../utils/auditHelper.js';
-
-const PARTNER_1 = {
-  _id: 'user_partner_1',
-  name: 'AJMALSHA',
-  email: 'ajmalsha@cartseven.com',
-  role: 'admin',
-  location: 'Central Office',
-  phone: '+91 98201 44891',
-  password: 'password123',
-  isActive: true,
-};
-
-const PARTNER_2 = {
-  _id: 'user_partner_2',
-  name: 'ASHIQUE SALIM',
-  email: 'ashique@cartseven.com',
-  role: 'accountant',
-  location: 'Central Office',
-  phone: '+91 98201 44892',
-  password: 'password123',
-  isActive: true,
-};
-
-const PARTNER_3 = {
-  _id: 'user_partner_3',
-  name: 'SHANU',
-  email: 'shanu@cartseven.com',
-  role: 'manager',
-  location: 'Central Office',
-  phone: '+91 98201 44893',
-  password: 'password123',
-  isActive: true,
-};
-
-const DEMO_USERS_MAP = {
-  'ajmalsha@cartseven.com': PARTNER_1,
-  'partner1@cartseven.com': PARTNER_1,
-  'admin@cartseven.com': PARTNER_1,
-  'ashique@cartseven.com': PARTNER_2,
-  'ashiquesalim@cartseven.com': PARTNER_2,
-  'partner2@cartseven.com': PARTNER_2,
-  'accountant@cartseven.com': PARTNER_2,
-  'shanu@cartseven.com': PARTNER_3,
-  'partner3@cartseven.com': PARTNER_3,
-  'manager@cartseven.com': PARTNER_3,
-};
+import {
+  getAuthorizedMembers,
+  findAuthorizedMemberByEmail,
+  isAuthorizedMember,
+  verifyMemberCredentials,
+  getAuthorizedMemberById,
+} from '../config/authorizedMembers.js';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'cartseven_jwt_secret_key_super_secure_987654321_ecommerce', {
@@ -55,7 +16,20 @@ const generateToken = (id) => {
   });
 };
 
-// @desc    Auth user & get token
+// @desc    Get portal access policy & redirect URL
+// @route   GET /api/auth/access-info
+// @access  Public
+export const getAccessInfo = (req, res) => {
+  res.json({
+    success: true,
+    restricted: true,
+    redirectUrl: process.env.PUBLIC_REDIRECT_URL || 'https://cartseven.com/',
+    portalName: 'CartSeven Accounting & Finance Portal',
+    message: 'This site is restricted strictly to 3 authorized partners. Unauthorized visitors are redirected to https://cartseven.com/',
+  });
+};
+
+// @desc    Auth user & get token (Strictly restricted to 3 authorized partners configured in .env)
 // @route   POST /api/auth/login
 // @access  Public
 export const login = async (req, res) => {
@@ -66,70 +40,81 @@ export const login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
-    let user = null;
-    let isMatch = false;
+    const cleanEmail = email.trim().toLowerCase();
 
-    // Try MongoDB if connected
+    // 1. Strict Authorization: MUST be one of the 3 authorized partners configured in .env
+    const authorizedPartner = findAuthorizedMemberByEmail(cleanEmail);
+    if (!authorizedPartner) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access Denied: You are not an authorized partner of CartSeven. Please visit our public website at https://cartseven.com/.',
+        redirectUrl: process.env.PUBLIC_REDIRECT_URL || 'https://cartseven.com/',
+        isUnauthorizedVisitor: true,
+      });
+    }
+
+    // 2. Credential Verification against .env credentials
+    let isMatch = verifyMemberCredentials(cleanEmail, password);
+
+    // Optional: Check MongoDB if connected
+    let user = null;
     if (mongoose.connection.readyState === 1) {
       try {
-        user = await User.findOne({ email }).select('+password');
-        if (user) {
-          isMatch = await user.matchPassword(password);
+        const dbUser = await User.findOne({ email: authorizedPartner.email }).select('+password');
+        if (dbUser) {
+          const dbMatch = await dbUser.matchPassword(password);
+          if (dbMatch) {
+            isMatch = true;
+          }
+          user = dbUser;
         }
       } catch (err) {
-        console.warn('MongoDB query failed, falling back to in-memory accounts:', err.message);
+        console.warn('MongoDB query warning, using .env credential store:', err.message);
       }
     }
 
-    // Fallback in-memory authentication if DB offline or user not in DB
-    if (!user) {
-      const demoUser = DEMO_USERS_MAP[email.toLowerCase()];
-      if (demoUser && (password === demoUser.password || password === 'password123')) {
-        user = demoUser;
-        isMatch = true;
-      }
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password for authorized partner account.',
+      });
     }
 
-    if (!user || !isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
+    // User representation from .env
+    const userPayload = {
+      _id: authorizedPartner._id,
+      name: authorizedPartner.name,
+      email: authorizedPartner.email,
+      role: authorizedPartner.role,
+      location: authorizedPartner.location,
+      phone: authorizedPartner.phone,
+      isActive: true,
+      lastLogin: new Date(),
+    };
 
-    if (user.isActive === false) {
-      return res.status(403).json({ success: false, message: 'This account has been deactivated. Contact admin.' });
-    }
-
-    const token = generateToken(user._id);
+    const token = generateToken(userPayload._id);
 
     try {
       await logAudit({
         req,
-        user,
+        user: userPayload,
         action: 'LOGIN',
         entity: 'Auth',
-        entityId: user._id,
-        details: `User logged in from ${user.location || 'remote location'}`,
+        entityId: userPayload._id,
+        details: `Authorized Partner ${userPayload.name} logged into CartSeven Portal`,
       });
     } catch {
       // Non-critical audit write failure
     }
 
-    res.json({
+    return res.json({
       success: true,
       token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        location: user.location,
-        phone: user.phone,
-        avatar: user.avatar,
-        lastLogin: new Date(),
-      },
+      user: userPayload,
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ success: false, message: 'Server error during login' });
+    return res.status(500).json({ success: false, message: 'Server error during login' });
   }
 };
 
@@ -139,6 +124,14 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = req.user;
+    if (!user || !isAuthorizedMember(user.email)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access Denied: Only authorized partners of CartSeven may access this system.',
+        redirectUrl: process.env.PUBLIC_REDIRECT_URL || 'https://cartseven.com/',
+      });
+    }
+
     res.json({
       success: true,
       user: {
@@ -165,6 +158,14 @@ export const updateProfile = async (req, res) => {
     const { name, phone, location } = req.body;
     let user = req.user;
 
+    if (!user || !isAuthorizedMember(user.email)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access Denied: Only authorized partners may modify settings.',
+        redirectUrl: process.env.PUBLIC_REDIRECT_URL || 'https://cartseven.com/',
+      });
+    }
+
     if (mongoose.connection.readyState === 1 && user._id && typeof user.save === 'function') {
       user.name = name || user.name;
       user.phone = phone || user.phone;
@@ -187,6 +188,51 @@ export const updateProfile = async (req, res) => {
         phone: user.phone,
       },
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Change password for authenticated partner
+// @route   PUT /api/auth/change-password
+// @access  Private
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = req.user;
+
+    if (!user || !isAuthorizedMember(user.email)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access Denied: Only authorized partners may modify settings.',
+        redirectUrl: process.env.PUBLIC_REDIRECT_URL || 'https://cartseven.com/',
+      });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Please provide both current and new password' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
+
+    const isMatch = verifyMemberCredentials(user.email, currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Current password does not match' });
+    }
+
+    const member = findAuthorizedMemberByEmail(user.email);
+    if (member) {
+      member.password = newPassword;
+    }
+
+    if (mongoose.connection.readyState === 1 && user._id && typeof user.save === 'function') {
+      user.password = newPassword;
+      await user.save();
+    }
+
+    res.json({ success: true, message: 'Password updated successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

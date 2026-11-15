@@ -44,7 +44,11 @@ export async function request<T>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || `Request failed with status ${response.status}`);
+    const error = new Error(data.message || `Request failed with status ${response.status}`) as any;
+    error.status = response.status;
+    error.data = data;
+    error.redirectUrl = data.redirectUrl;
+    throw error;
   }
 
   return data as T;

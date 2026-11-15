@@ -94,7 +94,10 @@ export const Sidebar: React.FC = () => {
       {/* User Profile Block */}
       <div className="space-y-4 pt-4">
         {/* User Profile Card matching Figma layout */}
-        <div className="bg-[#1A1B20] border border-[#262832] rounded-xl p-2.5 flex items-center justify-between">
+        <div
+          onClick={() => navigate('/profile')}
+          className="bg-[#1A1B20] border border-[#262832] hover:border-[#383A48] rounded-xl p-2.5 flex items-center justify-between cursor-pointer transition"
+        >
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div
               style={{ backgroundColor: theme.primary }}
@@ -104,18 +107,21 @@ export const Sidebar: React.FC = () => {
             </div>
             <div className="truncate">
               <div className="text-xs font-bold text-white truncate leading-tight">
-                {user?.name || 'Marvilo'}
+                {user?.name || 'Partner'}
               </div>
               <div className="text-[10px] text-slate-400 truncate mt-0.5">
-                {user?.role === 'admin' ? 'UI /UX Designer' : user?.role || 'Store Manager'}
+                {user?.role === 'admin' ? 'Managing Partner' : user?.role === 'accountant' ? 'Finance Partner' : 'Operations Partner'}
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-1 text-slate-400">
             <button
-              onClick={() => navigate('/settings')}
-              title="Settings"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/profile');
+              }}
+              title="My Profile Settings"
               className="p-1 hover:text-white transition"
             >
               <MoreHorizontal className="w-4 h-4" />
